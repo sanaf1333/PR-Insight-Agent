@@ -65,8 +65,8 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Default environment includes:
   - `AI_API_KEY` from repository secrets
   - `GITHUB_TOKEN` from GitHub Actions
-  - `AI_MODEL_NAME=gemini-1.5-flash`
-  - `DOCS_PATH=README.md,docs/**/*.md`
+  - `AI_MODEL_NAME=gemini-2.5-flash-lite`
+  - `DOCS_PATH=README.md,documentation/**/*.md`
   - diff size guardrails for bytes and lines
 
 ### 7. Testing Added
@@ -142,3 +142,14 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Tightened `src/prompts/docSync.ts` again:
   - limited suggestions to at most 3 bullets
   - reduced the word budget further to keep documentation comments compact
+
+### 14. Documentation Alignment Pass
+
+- Updated `README.md` with current setup and behavior details:
+  - required secret and key environment variables
+  - current default model
+  - current `DOCS_PATH` pattern
+  - update-in-place publishing behavior
+- Updated `documentation/PRODUCT_SPEC.md` so output requirements better reflect the current concise summary, diff-based risk comments, and documentation-only doc-sync suggestions.
+- Updated `documentation/IMPLEMENTATION_PLAN.md` so the publishing phase reflects split output plus update-in-place behavior instead of duplicate comments.
+- Tightened `src/prompts/docSync.ts` again to explicitly forbid suggesting edits to source files, tests, workflows, or other non-documentation paths.

@@ -9,6 +9,8 @@ export function buildDocSyncPrompt(
   return [
     "Compare the pull request changes with the provided documentation and return only actionable documentation guidance.",
     "Do not summarize the PR, do not explain what files were reviewed, and do not restate implementation details.",
+    "Suggest changes only for documentation files that already exist in the provided documentation content.",
+    "Never propose edits to source files, test files, workflow files, or any path outside the provided documentation set.",
     "If the docs already match the code changes, respond with exactly: No documentation changes suggested.",
     "If documentation updates are needed, respond with only this heading and bullet list:",
     "## Suggested Updates",

@@ -113,18 +113,20 @@ The PR summary should include:
 - key code changes
 - rationale or inferred purpose
 - testing suggestions
+- concise formatting suitable for PR body updates
 
 The documentation sync result should include:
 
 - whether documentation appears aligned
-- specific files affected
 - suggested Markdown updates when drift is detected
+- suggestions that target documentation files only
+- a short no-change response when docs are already aligned
 
 The risk analysis should include:
 
-- severity or confidence label if available
-- identified risk areas
+- concrete diff-based risk areas
 - suggested reviewer checks
+- concise output suitable for PR comments
 
 ### 7.6 Failure Handling
 

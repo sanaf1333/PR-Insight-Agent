@@ -153,3 +153,11 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Updated `documentation/PRODUCT_SPEC.md` so output requirements better reflect the current concise summary, diff-based risk comments, and documentation-only doc-sync suggestions.
 - Updated `documentation/IMPLEMENTATION_PLAN.md` so the publishing phase reflects split output plus update-in-place behavior instead of duplicate comments.
 - Tightened `src/prompts/docSync.ts` again to explicitly forbid suggesting edits to source files, tests, workflows, or other non-documentation paths.
+
+### 15. No-Risk And No-Doc Tuning
+
+- Adjusted `src/prompts/riskAnalysis.ts` so prompt-tuning, formatting, documentation-only, and other non-behavioral changes are more likely to return `No significant code-level risks identified.` instead of a meta-risk.
+- Added a stronger guard that tighter wording or shorter outputs should not be treated as a risk unless required behavior is actually removed.
+- Adjusted `src/prompts/docSync.ts` so already-updated docs in the same PR are more likely to return `No documentation changes suggested.`
+- Added a guard against suggesting changelog or build-log updates unless those files are clearly inaccurate or missing a decision that this PR introduces.
+- Expanded `tests/formatters.test.ts` to cover explicit no-risk and no-documentation-change normalization paths.

@@ -100,6 +100,12 @@ describe("normalizeDocSync", () => {
     expect(result).toBe("No documentation changes suggested.");
   });
 
+  it("collapses explicit no-change responses even without headings", () => {
+    const result = normalizeDocSync("No documentation changes suggested.");
+
+    expect(result).toBe("No documentation changes suggested.");
+  });
+
   it("keeps only suggested update bullets when present", () => {
     const result = normalizeDocSync(
       [
@@ -143,5 +149,20 @@ describe("normalizeRiskAnalysis", () => {
     expect(result).toContain("## Reviewer Checks");
     expect(result).not.toContain("Risk four.");
     expect(result).not.toContain("Check four.");
+  });
+
+  it("preserves explicit no-risk responses", () => {
+    const result = normalizeRiskAnalysis(
+      [
+        "## Top Risks",
+        "No significant code-level risks identified.",
+        "",
+        "## Reviewer Checks",
+        "- Optional spot-check only.",
+      ].join("\n"),
+    );
+
+    expect(result).toContain("No significant code-level risks identified.");
+    expect(result).toContain("Optional spot-check only.");
   });
 });

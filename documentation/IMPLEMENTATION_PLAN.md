@@ -203,12 +203,11 @@ This sequence reduces integration risk and makes it easier to validate each subs
 
 - implement formatting helpers in `src/output/formatters.ts`
 - implement GitHub publishing logic in `src/output/publisher.ts`
-- support at least one default output mode:
-  - PR comment
-- optionally support:
-  - PR body update
-  - dual publish mode
-- preserve existing PR content when updating the body unless explicitly configured otherwise
+- implement split publishing behavior:
+  - PR summary updates the PR body
+  - risk and doc-sync publish as separate comments
+- add update-in-place behavior for managed summary and comments
+- preserve existing non-agent PR content when updating the body
 
 ### Deliverables
 
@@ -218,7 +217,7 @@ This sequence reduces integration risk and makes it easier to validate each subs
 ### Exit Criteria
 
 - published output is readable and structured
-- repeated runs do not create confusing or destructive PR updates
+- repeated runs update managed content in place without creating duplicates
 
 ## 9. Phase 7: Logging, Error Handling, and Resilience
 
@@ -382,4 +381,3 @@ The MVP is complete when:
 - doc-sync works when docs are configured and skips safely otherwise
 - logs are understandable and free of secret leakage
 - targeted tests cover the core decision paths
-

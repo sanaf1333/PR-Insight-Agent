@@ -65,8 +65,8 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Default environment includes:
   - `AI_API_KEY` from repository secrets
   - `GITHUB_TOKEN` from GitHub Actions
-  - `AI_MODEL_NAME=gemini-1.5-flash`
-  - `DOCS_PATH=README.md,docs/**/*.md`
+  - `AI_MODEL_NAME=gemini-2.5-flash-lite`
+  - `DOCS_PATH=README.md,documentation/**/*.md`
   - diff size guardrails for bytes and lines
 
 ### 7. Testing Added
@@ -126,3 +126,30 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Changed PR summary publishing to replace the existing managed summary block in the PR body instead of appending a new summary on every run.
 - Added managed HTML comment markers for the PR summary, risk comment, and doc-sync comment.
 - Added GitHub comment upsert behavior so existing PR-Insight comments are updated in place instead of creating duplicates on each workflow execution.
+
+### 13. Prompt Refinement Pass
+
+- Reviewed the next live PR output and found that the summary was still slightly too prose-heavy for the PR body.
+- Tightened `src/prompts/prSummary.ts` again:
+  - reduced the word budget
+  - limited Summary to 2 sentences
+  - limited Key Changes to 4 bullets
+  - discouraged extra overview wording
+- Tightened `src/prompts/riskAnalysis.ts` again:
+  - pushed the model to report only concrete diff-based risks
+  - discouraged generic findings about model choice, missing tests, future work, or architecture unless they create an immediate risk in the changed code
+  - reduced word and bullet budgets further
+- Tightened `src/prompts/docSync.ts` again:
+  - limited suggestions to at most 3 bullets
+  - reduced the word budget further to keep documentation comments compact
+
+### 14. Documentation Alignment Pass
+
+- Updated `README.md` with current setup and behavior details:
+  - required secret and key environment variables
+  - current default model
+  - current `DOCS_PATH` pattern
+  - update-in-place publishing behavior
+- Updated `documentation/PRODUCT_SPEC.md` so output requirements better reflect the current concise summary, diff-based risk comments, and documentation-only doc-sync suggestions.
+- Updated `documentation/IMPLEMENTATION_PLAN.md` so the publishing phase reflects split output plus update-in-place behavior instead of duplicate comments.
+- Tightened `src/prompts/docSync.ts` again to explicitly forbid suggesting edits to source files, tests, workflows, or other non-documentation paths.

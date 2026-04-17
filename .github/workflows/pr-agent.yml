@@ -15,8 +15,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       AI_API_KEY: ${{ secrets.AI_API_KEY }}
-      AI_MODEL_NAME: gemini-1.5-flash
-      DOCS_PATH: README.md,docs/**/*.md
+      AI_MODEL_NAME: gemini-2.5-flash
+      DOCS_PATH: README.md,documentation/**/*.md
       MAX_DIFF_BYTES: "61440"
       MAX_DIFF_LINES: "1500"
     steps:

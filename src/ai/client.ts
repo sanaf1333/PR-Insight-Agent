@@ -35,8 +35,10 @@ export async function generateAnalysis(
       request,
     );
   } catch (error) {
+    const details =
+      error instanceof Error ? `: ${error.message}` : `: ${String(error)}`;
     throw new ProviderError(
-      `Failed to generate ${request.kind} using provider ${provider.name}`,
+      `Failed to generate ${request.kind} using provider ${provider.name}${details}`,
       error,
     );
   }

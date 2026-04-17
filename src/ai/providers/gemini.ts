@@ -41,9 +41,10 @@ export class GeminiProvider implements AiProvider {
     });
 
     if (!response.ok) {
+      const responseBody = await response.text();
       throw new ProviderError(
-        `Gemini request failed with status ${response.status}`,
-        await response.text(),
+        `Gemini request failed with status ${response.status}: ${responseBody}`,
+        responseBody,
       );
     }
 

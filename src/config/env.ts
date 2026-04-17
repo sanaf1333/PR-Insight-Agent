@@ -39,7 +39,7 @@ export function loadConfig(): AppConfig {
     githubToken:
       readOptionalInput("GITHUB_TOKEN") || process.env.GITHUB_TOKEN || "",
     aiApiKey: readOptionalInput("AI_API_KEY") || "",
-    aiModelName: readOptionalInput("AI_MODEL_NAME") || "gemini-2.5-flash",
+    aiModelName: readOptionalInput("AI_MODEL_NAME") || "gemini-2.5-flash-lite",
     aiBaseUrl: readOptionalInput("AI_BASE_URL"),
     docsPath: readOptionalInput("DOCS_PATH"),
     maxDiffBytes: readNumberInput("MAX_DIFF_BYTES"),

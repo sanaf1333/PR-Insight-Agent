@@ -109,3 +109,11 @@ This file records the implementation process for PR-Insight Agent, including sca
   - aligned-docs responses become a single-line no-change result
   - risk output is reduced to compact `Top Risks` and `Reviewer Checks` sections
 - Expanded `tests/formatters.test.ts` to cover the new normalization behavior.
+
+### 11. Gemini Availability Hardening
+
+- Observed a live GitHub Actions failure from Gemini with HTTP `503 UNAVAILABLE` during risk analysis generation.
+- Confirmed this indicates temporary provider overload rather than a missing `AI_API_KEY`, because the request reached Gemini successfully.
+- Switched the default model from `gemini-2.5-flash` to `gemini-2.5-flash-lite` to reduce demand pressure and cost.
+- Added retry-with-backoff logic in `src/ai/providers/gemini.ts` for transient `503` and `429` responses.
+- Kept the final error message detailed so future provider-side failures remain easy to diagnose from GitHub Actions logs.

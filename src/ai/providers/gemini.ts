@@ -8,6 +8,14 @@ import { ProviderError } from "../../utils/errors.js";
 
 const DEFAULT_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1500;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 export class GeminiProvider implements AiProvider {
   readonly name = "gemini";
@@ -21,54 +29,64 @@ export class GeminiProvider implements AiProvider {
       context.apiKey,
     )}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `You are a pull request analysis assistant. Return concise markdown.\n\n${request.prompt}`,
-              },
-            ],
-          },
-        ],
-      }),
-    });
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `You are a pull request analysis assistant. Return concise markdown.\n\n${request.prompt}`,
+                },
+              ],
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const responseBody = await response.text();
-      throw new ProviderError(
-        `Gemini request failed with status ${response.status}: ${responseBody}`,
-        responseBody,
-      );
-    }
-
-    const data = (await response.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string }>;
+      if (response.ok) {
+        const data = (await response.json()) as {
+          candidates?: Array<{
+            content?: {
+              parts?: Array<{ text?: string }>;
+            };
+          }>;
         };
-      }>;
-    };
 
-    const text = data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join("")
-      .trim();
+        const text = data.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text ?? "")
+          .join("")
+          .trim();
 
-    if (!text) {
-      throw new ProviderError("Gemini response did not contain text");
+        if (!text) {
+          throw new ProviderError("Gemini response did not contain text");
+        }
+
+        return {
+          text,
+          model: context.model,
+          provider: this.name,
+        };
+      }
+
+      const responseBody = await response.text();
+      const isRetriable = response.status === 503 || response.status === 429;
+
+      if (!isRetriable || attempt === MAX_RETRIES) {
+        throw new ProviderError(
+          `Gemini request failed with status ${response.status}: ${responseBody}`,
+          responseBody,
+        );
+      }
+
+      await sleep(RETRY_DELAY_MS * attempt);
     }
 
-    return {
-      text,
-      model: context.model,
-      provider: this.name,
-    };
+    throw new ProviderError("Gemini request failed after retries");
   }
 }

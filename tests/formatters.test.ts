@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildRiskComment,
   buildDocSyncComment,
   buildSummaryAppend,
+  DOC_SYNC_COMMENT_MARKER,
   limitDiff,
   normalizeDocSync,
   normalizeRiskAnalysis,
+  RISK_COMMENT_MARKER,
+  SUMMARY_END_MARKER,
+  SUMMARY_START_MARKER,
 } from "../src/output/formatters.js";
 
 describe("limitDiff", () => {
@@ -26,8 +31,46 @@ describe("buildSummaryAppend", () => {
   it("preserves existing body content", () => {
     const result = buildSummaryAppend("Existing body", "New summary");
     expect(result).toContain("Existing body");
-    expect(result).toContain("## PR-Insight Summary");
+    expect(result).toContain(SUMMARY_START_MARKER);
     expect(result).toContain("New summary");
+  });
+
+  it("replaces an existing managed summary block", () => {
+    const existingBody = [
+      "Existing body",
+      "",
+      SUMMARY_START_MARKER,
+      "## PR-Insight Summary",
+      "",
+      "Old summary",
+      SUMMARY_END_MARKER,
+    ].join("\n");
+
+    const result = buildSummaryAppend(existingBody, "New summary");
+
+    expect(result).toContain("Existing body");
+    expect(result).toContain("New summary");
+    expect(result).not.toContain("Old summary");
+    expect(result.match(new RegExp(SUMMARY_START_MARKER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"))).toHaveLength(1);
+  });
+
+  it("replaces a legacy unmarked summary block", () => {
+    const existingBody = [
+      "Existing body",
+      "",
+      "---",
+      "",
+      "## PR-Insight Summary",
+      "",
+      "Old summary",
+    ].join("\n");
+
+    const result = buildSummaryAppend(existingBody, "New summary");
+
+    expect(result).toContain("Existing body");
+    expect(result).toContain("New summary");
+    expect(result).not.toContain("Old summary");
+    expect(result).toContain(SUMMARY_START_MARKER);
   });
 });
 
@@ -35,8 +78,16 @@ describe("buildDocSyncComment", () => {
   it("includes title and note", () => {
     const result = buildDocSyncComment("Doc content", "Note");
     expect(result).toContain("PR-Insight Documentation Sync");
+    expect(result).toContain(DOC_SYNC_COMMENT_MARKER);
     expect(result).toContain("Note");
     expect(result).toContain("Doc content");
+  });
+});
+
+describe("buildRiskComment marker", () => {
+  it("includes the managed risk marker", () => {
+    const result = buildRiskComment("Risk content", "Note");
+    expect(result).toContain(RISK_COMMENT_MARKER);
   });
 });
 

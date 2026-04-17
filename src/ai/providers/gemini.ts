@@ -10,11 +10,19 @@ const DEFAULT_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1500;
+const MAX_DELAY_MS = 10_000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+export function calculateRetryDelay(attempt: number): number {
+  return Math.min(
+    RETRY_DELAY_MS * Math.pow(2, attempt - 1) + Math.random() * 1000,
+    MAX_DELAY_MS,
+  );
 }
 
 export class GeminiProvider implements AiProvider {
@@ -84,7 +92,7 @@ export class GeminiProvider implements AiProvider {
         );
       }
 
-      await sleep(RETRY_DELAY_MS * attempt);
+      await sleep(calculateRetryDelay(attempt));
     }
 
     throw new ProviderError("Gemini request failed after retries");

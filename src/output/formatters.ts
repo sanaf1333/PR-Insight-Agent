@@ -1,5 +1,10 @@
 import type { AppConfig } from "../config/env.js";
 
+export const SUMMARY_START_MARKER = "<!-- pr-insight:summary:start -->";
+export const SUMMARY_END_MARKER = "<!-- pr-insight:summary:end -->";
+export const RISK_COMMENT_MARKER = "<!-- pr-insight:risk-comment -->";
+export const DOC_SYNC_COMMENT_MARKER = "<!-- pr-insight:doc-sync-comment -->";
+
 export interface DiffLimitResult {
   diffText: string;
   truncated: boolean;
@@ -70,21 +75,62 @@ export function limitDiff(
   };
 }
 
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function buildSummarySection(summary: string): string {
+  const normalizedSummary = normalizeSummary(summary);
+  return [
+    SUMMARY_START_MARKER,
+    "## PR-Insight Summary",
+    "",
+    normalizedSummary,
+    SUMMARY_END_MARKER,
+  ].join("\n");
+}
+
 export function buildSummaryAppend(existingBody: string, summary: string): string {
   const cleanedBody = existingBody.trim();
+  const summarySection = buildSummarySection(summary);
+  const existingSummaryPattern = new RegExp(
+    `${escapeRegex(SUMMARY_START_MARKER)}[\\s\\S]*?${escapeRegex(
+      SUMMARY_END_MARKER,
+    )}`,
+    "m",
+  );
+
+  if (existingSummaryPattern.test(cleanedBody)) {
+    return cleanedBody.replace(existingSummaryPattern, summarySection).trim();
+  }
+
+  const legacySummaryPattern = /(?:\n\n---\n\n)?## PR-Insight Summary[\s\S]*$/m;
+  if (legacySummaryPattern.test(cleanedBody)) {
+    return cleanedBody.replace(legacySummaryPattern, `\n\n---\n\n${summarySection}`).trim();
+  }
+
   const separator = cleanedBody ? "\n\n---\n\n" : "";
-  const normalizedSummary = normalizeSummary(summary);
-  return `${cleanedBody}${separator}## PR-Insight Summary\n\n${normalizedSummary}`.trim();
+  return `${cleanedBody}${separator}${summarySection}`.trim();
 }
 
 export function buildRiskComment(riskAnalysis: string, note?: string): string {
-  return ["## PR-Insight Risk Analysis", note, normalizeRiskAnalysis(riskAnalysis)]
+  return [
+    RISK_COMMENT_MARKER,
+    "## PR-Insight Risk Analysis",
+    note,
+    normalizeRiskAnalysis(riskAnalysis),
+  ]
     .filter(Boolean)
     .join("\n\n");
 }
 
 export function buildDocSyncComment(docSync: string, note?: string): string {
-  return ["## PR-Insight Documentation Sync", note, normalizeDocSync(docSync)]
+  return [
+    DOC_SYNC_COMMENT_MARKER,
+    "## PR-Insight Documentation Sync",
+    note,
+    normalizeDocSync(docSync),
+  ]
     .filter(Boolean)
     .join("\n\n");
 }

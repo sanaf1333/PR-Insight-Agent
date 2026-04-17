@@ -97,3 +97,37 @@ export async function createIssueComment(
     body,
   });
 }
+
+export async function upsertManagedIssueComment(
+  config: AppConfig,
+  pullRequest: PullRequestContext,
+  marker: string,
+  body: string,
+  fallbackHeading?: string,
+): Promise<void> {
+  const octokit = getOctokit(config.githubToken);
+  const comments = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner: pullRequest.owner,
+    repo: pullRequest.repo,
+    issue_number: pullRequest.pullNumber,
+    per_page: 100,
+  });
+
+  const existingComment = comments.find(
+    (comment) =>
+      comment.body?.includes(marker) ||
+      (fallbackHeading ? comment.body?.includes(fallbackHeading) : false),
+  );
+
+  if (existingComment) {
+    await octokit.rest.issues.updateComment({
+      owner: pullRequest.owner,
+      repo: pullRequest.repo,
+      comment_id: existingComment.id,
+      body,
+    });
+    return;
+  }
+
+  await createIssueComment(config, pullRequest, body);
+}

@@ -117,3 +117,12 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Switched the default model from `gemini-2.5-flash` to `gemini-2.5-flash-lite` to reduce demand pressure and cost.
 - Added retry-with-backoff logic in `src/ai/providers/gemini.ts` for transient `503` and `429` responses.
 - Kept the final error message detailed so future provider-side failures remain easy to diagnose from GitHub Actions logs.
+
+### 12. Retry And Upsert Fixes
+
+- Verified that the initial Gemini retry logic used linear delay (`RETRY_DELAY_MS * attempt`) rather than exponential backoff.
+- Replaced the delay calculation with exponential backoff plus jitter, capped by a maximum delay, to reduce thundering-herd retries during provider spikes.
+- Added test coverage for the retry delay calculation in `tests/gemini.test.ts`.
+- Changed PR summary publishing to replace the existing managed summary block in the PR body instead of appending a new summary on every run.
+- Added managed HTML comment markers for the PR summary, risk comment, and doc-sync comment.
+- Added GitHub comment upsert behavior so existing PR-Insight comments are updated in place instead of creating duplicates on each workflow execution.

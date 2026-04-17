@@ -6,6 +6,40 @@ export interface DiffLimitResult {
   truncatedReason?: string;
 }
 
+function normalizeWhitespace(text: string): string {
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function stripLeadingHeading(text: string): string {
+  return text.replace(/^#{1,3}\s+PR-Insight[^\n]*\n+/i, "").trim();
+}
+
+function findSection(text: string, heading: string): string | undefined {
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(
+    `^##\\s+${escapedHeading}\\s*\\n([\\s\\S]*?)(?=^##\\s+|\\s*$)`,
+    "im",
+  );
+  return text.match(regex)?.[1]?.trim();
+}
+
+function limitBullets(section: string, maxBullets: number): string {
+  const lines = section
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter(Boolean);
+
+  const bulletLines = lines.filter((line) => /^[-*]\s+/.test(line));
+  if (bulletLines.length === 0) {
+    return lines.slice(0, 2).join("\n");
+  }
+
+  return bulletLines.slice(0, maxBullets).join("\n");
+}
+
 export function limitDiff(
   diffText: string,
   config: Pick<AppConfig, "maxDiffBytes" | "maxDiffLines">,
@@ -39,15 +73,66 @@ export function limitDiff(
 export function buildSummaryAppend(existingBody: string, summary: string): string {
   const cleanedBody = existingBody.trim();
   const separator = cleanedBody ? "\n\n---\n\n" : "";
-  return `${cleanedBody}${separator}## PR-Insight Summary\n\n${summary}`.trim();
+  const normalizedSummary = normalizeSummary(summary);
+  return `${cleanedBody}${separator}## PR-Insight Summary\n\n${normalizedSummary}`.trim();
 }
 
 export function buildRiskComment(riskAnalysis: string, note?: string): string {
-  return ["## PR-Insight Risk Analysis", note, riskAnalysis].filter(Boolean).join("\n\n");
+  return ["## PR-Insight Risk Analysis", note, normalizeRiskAnalysis(riskAnalysis)]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function buildDocSyncComment(docSync: string, note?: string): string {
-  return ["## PR-Insight Documentation Sync", note, docSync]
+  return ["## PR-Insight Documentation Sync", note, normalizeDocSync(docSync)]
     .filter(Boolean)
     .join("\n\n");
+}
+
+export function normalizeSummary(text: string): string {
+  const cleaned = normalizeWhitespace(stripLeadingHeading(text));
+  return cleaned;
+}
+
+export function normalizeRiskAnalysis(text: string): string {
+  const cleaned = normalizeWhitespace(stripLeadingHeading(text));
+  const topRisks = findSection(cleaned, "Top Risks");
+  const reviewerChecks = findSection(cleaned, "Reviewer Checks");
+
+  if (!topRisks && !reviewerChecks) {
+    return cleaned;
+  }
+
+  return [
+    topRisks ? `## Top Risks\n${limitBullets(topRisks, 3)}` : undefined,
+    reviewerChecks
+      ? `## Reviewer Checks\n${limitBullets(reviewerChecks, 3)}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+export function normalizeDocSync(text: string): string {
+  const cleaned = normalizeWhitespace(stripLeadingHeading(text));
+
+  if (
+    /no documentation changes suggested|docs? (appear|is) aligned|documentation (appears|is) aligned/i.test(
+      cleaned,
+    )
+  ) {
+    return "No documentation changes suggested.";
+  }
+
+  const suggestedUpdates = findSection(cleaned, "Suggested Updates");
+  if (!suggestedUpdates) {
+    return cleaned;
+  }
+
+  const limitedSuggestions = limitBullets(suggestedUpdates, 5);
+  if (!limitedSuggestions) {
+    return "No documentation changes suggested.";
+  }
+
+  return `## Suggested Updates\n${limitedSuggestions}`;
 }

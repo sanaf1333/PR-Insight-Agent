@@ -94,3 +94,18 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Live GitHub Action testing requires pushing these changes to the GitHub repository and opening a pull request in that repository.
 - No extra GitHub personal token is required for the action itself because GitHub Actions provides `GITHUB_TOKEN` automatically inside workflow runs.
 - Creating a separate remote test repository would require authenticated GitHub account access from this environment, which has not been configured here.
+
+### 10. Output Tightening Pass
+
+- Reviewed the first successful PR run and identified that PR summary, risk analysis, and documentation sync outputs were too verbose for normal review workflows.
+- Tightened the prompt instructions in:
+  - `src/prompts/prSummary.ts`
+  - `src/prompts/riskAnalysis.ts`
+  - `src/prompts/docSync.ts`
+- Added explicit brevity rules such as word budgets, bullet limits, and instructions to avoid repeating file inventories or implementation recaps.
+- Changed the doc-sync prompt to prefer only actionable suggested updates, or exactly `No documentation changes suggested.` when docs are already aligned.
+- Added formatter-side normalization in `src/output/formatters.ts` so:
+  - doc-sync output is collapsed to suggested changes only when possible
+  - aligned-docs responses become a single-line no-change result
+  - risk output is reduced to compact `Top Risks` and `Reviewer Checks` sections
+- Expanded `tests/formatters.test.ts` to cover the new normalization behavior.

@@ -126,3 +126,19 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Changed PR summary publishing to replace the existing managed summary block in the PR body instead of appending a new summary on every run.
 - Added managed HTML comment markers for the PR summary, risk comment, and doc-sync comment.
 - Added GitHub comment upsert behavior so existing PR-Insight comments are updated in place instead of creating duplicates on each workflow execution.
+
+### 13. Prompt Refinement Pass
+
+- Reviewed the next live PR output and found that the summary was still slightly too prose-heavy for the PR body.
+- Tightened `src/prompts/prSummary.ts` again:
+  - reduced the word budget
+  - limited Summary to 2 sentences
+  - limited Key Changes to 4 bullets
+  - discouraged extra overview wording
+- Tightened `src/prompts/riskAnalysis.ts` again:
+  - pushed the model to report only concrete diff-based risks
+  - discouraged generic findings about model choice, missing tests, future work, or architecture unless they create an immediate risk in the changed code
+  - reduced word and bullet budgets further
+- Tightened `src/prompts/docSync.ts` again:
+  - limited suggestions to at most 3 bullets
+  - reduced the word budget further to keep documentation comments compact

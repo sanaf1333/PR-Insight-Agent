@@ -75,3 +75,36 @@ Additional project documentation lives in `documentation/`:
 - `documentation/PRODUCT_SPEC.md`
 - `documentation/IMPLEMENTATION_PLAN.md`
 - `documentation/BUILD_LOG.md`
+
+## Use In Other Repositories
+
+Once this repository is packaged and released as a GitHub Action, other repositories can use it in their workflows.
+
+Example:
+
+```yml
+name: PR Insight Agent
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr-insight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sanaf1333/PR-Insight-Agent@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          ai_model_name: gemini-2.5-flash-lite
+          docs_path: README.md,documentation/**/*.md
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+```
+
+Each consuming repository must configure its own `AI_API_KEY` secret.

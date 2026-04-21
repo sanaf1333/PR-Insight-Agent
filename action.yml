@@ -1,0 +1,30 @@
+name: PR-Insight Agent
+description: AI-driven PR summary, risk analysis, and documentation sync for GitHub pull requests.
+author: sanaf1333
+
+inputs:
+  github_token:
+    description: GitHub token used to read PR data and publish updates/comments.
+    required: true
+  ai_api_key:
+    description: AI provider API key (recommended to pass via env AI_API_KEY instead).
+    required: false
+  ai_model_name:
+    description: AI model identifier (for example gemini-2.5-flash-lite).
+    required: false
+  ai_base_url:
+    description: Optional AI base URL for custom endpoints.
+    required: false
+  docs_path:
+    description: Documentation path(s) or glob(s), comma-separated.
+    required: false
+  max_diff_bytes:
+    description: Maximum diff bytes to send to the model.
+    required: false
+  max_diff_lines:
+    description: Maximum diff lines to send to the model.
+    required: false
+
+runs:
+  using: node20
+  main: dist/index.js

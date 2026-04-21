@@ -161,3 +161,10 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Adjusted `src/prompts/docSync.ts` so already-updated docs in the same PR are more likely to return `No documentation changes suggested.`
 - Added a guard against suggesting changelog or build-log updates unless those files are clearly inaccurate or missing a decision that this PR introduces.
 - Expanded `tests/formatters.test.ts` to cover explicit no-risk and no-documentation-change normalization paths.
+
+### 16. Normalization Guardrails Pass
+
+- Observed another live case where the model still produced a meta-risk about prompt wording rather than returning a no-risk result.
+- Added formatter-side filtering in `src/output/formatters.ts` so meta-risk bullets about prompt wording, output constraints, or similar non-behavioral changes collapse to `No significant code-level risks identified.`
+- Added formatter-side filtering so doc-sync suggestions that only target non-documentation files collapse to `No documentation changes suggested.`
+- Expanded `tests/formatters.test.ts` to cover these regression cases.

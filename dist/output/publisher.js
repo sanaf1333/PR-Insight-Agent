@@ -1,0 +1,10 @@
+import { updatePullRequestBody, upsertManagedIssueComment } from "../github/client.js";
+import { buildDocSyncComment, buildRiskComment, buildSummaryAppend, DOC_SYNC_COMMENT_MARKER, RISK_COMMENT_MARKER, } from "./formatters.js";
+export async function publishResults(config, pullRequest, payload) {
+    const nextBody = buildSummaryAppend(pullRequest.body, payload.summary);
+    await updatePullRequestBody(config, pullRequest, nextBody);
+    await upsertManagedIssueComment(config, pullRequest, RISK_COMMENT_MARKER, buildRiskComment(payload.riskAnalysis, payload.truncationNote), "## PR-Insight Risk Analysis");
+    if (payload.docSync) {
+        await upsertManagedIssueComment(config, pullRequest, DOC_SYNC_COMMENT_MARKER, buildDocSyncComment(payload.docSync, payload.truncationNote), "## PR-Insight Documentation Sync");
+    }
+}

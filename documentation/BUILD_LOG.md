@@ -168,3 +168,11 @@ This file records the implementation process for PR-Insight Agent, including sca
 - Added formatter-side filtering in `src/output/formatters.ts` so meta-risk bullets about prompt wording, output constraints, or similar non-behavioral changes collapse to `No significant code-level risks identified.`
 - Added formatter-side filtering so doc-sync suggestions that only target non-documentation files collapse to `No documentation changes suggested.`
 - Expanded `tests/formatters.test.ts` to cover these regression cases.
+
+### 17. Packaging As A Reusable GitHub Action (Option A)
+
+- Added `action.yml` so the repository can be referenced via `uses: owner/repo@tag` from other repositories.
+- Added bundling with `@vercel/ncc` so the action runs from a committed `dist/index.js` without requiring dependency installation in consuming workflows.
+- Updated the local workflow `.github/workflows/pr-agent.yml` to execute the local action via `uses: ./` for self-testing.
+- Updated `README.md` with an example of using the action from other repositories.
+- Updated `src/config/env.ts` to support both workflow inputs (for `action.yml`) and environment variables for configuration.

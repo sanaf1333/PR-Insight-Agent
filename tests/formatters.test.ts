@@ -100,6 +100,12 @@ describe("normalizeDocSync", () => {
     expect(result).toBe("No documentation changes suggested.");
   });
 
+  it("collapses explicit no-change responses even without headings", () => {
+    const result = normalizeDocSync("No documentation changes suggested.");
+
+    expect(result).toBe("No documentation changes suggested.");
+  });
+
   it("keeps only suggested update bullets when present", () => {
     const result = normalizeDocSync(
       [
@@ -118,6 +124,18 @@ describe("normalizeDocSync", () => {
     expect(result).toContain("## Suggested Updates");
     expect(result).not.toContain("## Files Reviewed");
     expect(result).toContain("Update README.md");
+  });
+
+  it("drops non-documentation suggestions and returns no-change when none remain", () => {
+    const result = normalizeDocSync(
+      [
+        "## Suggested Updates",
+        "- src/prompts/prSummary.ts: Reduce the word budget.",
+        "- src/prompts/docSync.ts: Change the prompt wording.",
+      ].join("\n"),
+    );
+
+    expect(result).toBe("No documentation changes suggested.");
   });
 });
 
@@ -143,5 +161,35 @@ describe("normalizeRiskAnalysis", () => {
     expect(result).toContain("## Reviewer Checks");
     expect(result).not.toContain("Risk four.");
     expect(result).not.toContain("Check four.");
+  });
+
+  it("preserves explicit no-risk responses", () => {
+    const result = normalizeRiskAnalysis(
+      [
+        "## Top Risks",
+        "No significant code-level risks identified.",
+        "",
+        "## Reviewer Checks",
+        "- Optional spot-check only.",
+      ].join("\n"),
+    );
+
+    expect(result).toContain("No significant code-level risks identified.");
+    expect(result).toContain("Optional spot-check only.");
+  });
+
+  it("collapses prompt-meta risks to no significant code-level risks", () => {
+    const result = normalizeRiskAnalysis(
+      [
+        "## Top Risks",
+        "- The src/prompts/docSync.ts prompt has been updated and may miss documentation updates.",
+        "",
+        "## Reviewer Checks",
+        "- Verify the new prompt logic behaves as expected.",
+      ].join("\n"),
+    );
+
+    expect(result).toContain("No significant code-level risks identified.");
+    expect(result).toContain("Verify the new prompt logic behaves as expected.");
   });
 });

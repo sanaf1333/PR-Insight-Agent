@@ -45,6 +45,23 @@ function limitBullets(section: string, maxBullets: number): string {
   return bulletLines.slice(0, maxBullets).join("\n");
 }
 
+function extractBullets(section: string): string[] {
+  return section
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => /^[-*]\s+/.test(line));
+}
+
+function isMetaRiskBullet(line: string): boolean {
+  return /\b(prompt|wording|word budget|bullet limit|output|summary length|docsync\.ts|riskanalysis\.ts|prsummary\.ts|build log|changelog|documentation updates?)\b/i.test(
+    line,
+  );
+}
+
+function isDocumentationSuggestionBullet(line: string): boolean {
+  return /\bREADME\.md\b|\.md\b/i.test(line);
+}
+
 export function limitDiff(
   diffText: string,
   config: Pick<AppConfig, "maxDiffBytes" | "maxDiffLines">,
@@ -149,6 +166,18 @@ export function normalizeRiskAnalysis(text: string): string {
     return cleaned;
   }
 
+  const riskBullets = topRisks ? extractBullets(topRisks) : [];
+  if (riskBullets.length > 0 && riskBullets.every((line) => isMetaRiskBullet(line))) {
+    return reviewerChecks
+      ? [
+        "## Top Risks",
+        "No significant code-level risks identified.",
+        "",
+        `## Reviewer Checks\n${limitBullets(reviewerChecks, 1)}`,
+      ].join("\n")
+      : "## Top Risks\nNo significant code-level risks identified.";
+  }
+
   return [
     topRisks ? `## Top Risks\n${limitBullets(topRisks, 3)}` : undefined,
     reviewerChecks
@@ -175,7 +204,10 @@ export function normalizeDocSync(text: string): string {
     return cleaned;
   }
 
-  const limitedSuggestions = limitBullets(suggestedUpdates, 5);
+  const limitedSuggestions = extractBullets(suggestedUpdates)
+    .filter((line) => isDocumentationSuggestionBullet(line))
+    .slice(0, 5)
+    .join("\n");
   if (!limitedSuggestions) {
     return "No documentation changes suggested.";
   }

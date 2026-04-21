@@ -5,7 +5,7 @@ author: sanaf1333
 inputs:
   github_token:
     description: GitHub token used to read PR data and publish updates/comments.
-    required: false
+    required: true
   ai_api_key:
     description: AI provider API key (recommended to pass via env AI_API_KEY instead).
     required: false
@@ -28,4 +28,3 @@ inputs:
 runs:
   using: node20
   main: dist/index.js
-
